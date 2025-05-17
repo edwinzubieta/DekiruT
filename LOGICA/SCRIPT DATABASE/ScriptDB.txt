@@ -1,0 +1,204 @@
+-- ADVERTENCIA: La siguiente línea BORRA TODA LA BASE DE DATOS.
+-- Descomentar solo si estás en un entorno de desarrollo y sabes lo que haces.
+-- DROP DATABASE IF EXISTS DekiruDB;
+
+-- CREACIÓN DE BASE DE DATOS (si no existe)
+CREATE DATABASE IF NOT EXISTS DekiruTDB;
+USE DekiruTDB;
+
+-- -----------------------------------------------------
+-- Módulo: USUARIOS Y CLIENTES
+-- -----------------------------------------------------
+
+-- Tabla USUARIO: Para el inicio de sesión en el sistema (clientes, empleados, administradores)
+CREATE TABLE IF NOT EXISTS USUARIO (
+    id_usuario INT AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(100) NOT NULL,
+    apellido VARCHAR(100) NOT NULL,
+    correo VARCHAR(100) UNIQUE NOT NULL,
+    usuario VARCHAR(50) UNIQUE NOT NULL, 
+    contrasena VARCHAR(255) NOT NULL, -- Debe almacenarse hasheada
+    rol ENUM('CLIENTE', 'VENDEDOR', 'ADMINISTRADOR') NOT NULL DEFAULT 'CLIENTE',
+    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    activo BOOLEAN DEFAULT TRUE
+);
+
+-- Tabla CLIENTE: Información específica de los clientes que compran tiquetes
+CREATE TABLE IF NOT EXISTS CLIENTE (
+    id_cliente INT AUTO_INCREMENT PRIMARY KEY,
+    id_usuario INT UNIQUE, -- Un cliente PUEDE tener una cuenta de usuario para loguearse
+    nombre VARCHAR(100) NOT NULL,
+    apellido VARCHAR(100) NOT NULL,
+    documento_identidad VARCHAR(20) UNIQUE NOT NULL, -- Más descriptivo que 'documento'
+    telefono VARCHAR(20),
+    email VARCHAR(100) UNIQUE, -- Email puede ser único también para contacto directo
+    fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (id_usuario) REFERENCES USUARIO(id_usuario) ON DELETE SET NULL ON UPDATE CASCADE
+);
+
+-- -----------------------------------------------------
+-- Módulo: RECURSOS HUMANOS (Tablas originales del ERP)
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS EMPLEADO (
+    id_empleado INT AUTO_INCREMENT PRIMARY KEY,
+    id_usuario INT UNIQUE, -- Un empleado DEBE tener una cuenta de usuario para loguearse
+    nombre VARCHAR(100) NOT NULL,
+    apellido VARCHAR(100) NOT NULL,
+    documento_identidad VARCHAR(20) UNIQUE NOT NULL, -- Añadido para consistencia
+    cargo VARCHAR(100),
+    salario DECIMAL(10,2),
+    fecha_contratacion DATE,
+    estado_empleado ENUM('ACTIVO', 'INACTIVO', 'VACACIONES') DEFAULT 'ACTIVO', -- Mejorado
+    telefono VARCHAR(20), -- Añadido para consistencia
+    email VARCHAR(100) UNIQUE, -- Añadido para consistencia
+    FOREIGN KEY (id_usuario) REFERENCES USUARIO(id_usuario) ON DELETE RESTRICT ON UPDATE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS NOMINA (
+    id_nomina INT AUTO_INCREMENT PRIMARY KEY,
+    id_empleado INT NOT NULL,
+    salario_base DECIMAL(10,2),
+    fecha_pago DATE,
+    FOREIGN KEY (id_empleado) REFERENCES EMPLEADO(id_empleado) ON DELETE CASCADE
+);
+
+-- -----------------------------------------------------
+-- Módulo: GESTIÓN DE VIAJES Y RUTAS (NUEVO Y ESENCIAL)
+-- -----------------------------------------------------
+
+-- Tabla RUTA_BASE: Define los trayectos disponibles (ej: Tunja - Bogotá)
+CREATE TABLE IF NOT EXISTS RUTA_BASE (
+    id_ruta_base INT AUTO_INCREMENT PRIMARY KEY,
+    ciudad_origen VARCHAR(100) NOT NULL,
+    ciudad_destino VARCHAR(100) NOT NULL,
+    descripcion_ruta TEXT,
+    UNIQUE KEY idx_origen_destino_unico (ciudad_origen, ciudad_destino)
+);
+
+
+-- Tabla VIAJE_PROGRAMADO: Programación específica de un viaje
+CREATE TABLE IF NOT EXISTS VIAJE_PROGRAMADO (
+    id_viaje_programado INT AUTO_INCREMENT PRIMARY KEY,
+    id_ruta_base INT NOT NULL,
+    id_bus INT NOT NULL,
+    fecha_salida DATE NOT NULL,
+    hora_salida TIME NOT NULL, -- Para horarios como 6am, 12pm, 6pm
+    asientos_disponibles INT NOT NULL, -- Se actualiza con cada venta/cancelación
+    precio_tiquete DECIMAL(10,2) NOT NULL,
+    estado_viaje ENUM('PROGRAMADO', 'CONFIRMADO', 'EN_CURSO', 'FINALIZADO', 'CANCELADO') DEFAULT 'PROGRAMADO',
+    FOREIGN KEY (id_ruta_base) REFERENCES RUTA_BASE(id_ruta_base)
+);
+
+-- -----------------------------------------------------
+-- Módulo: VENTAS DE TIQUETES (Anteriormente VENTA)
+-- -----------------------------------------------------
+
+-- Tabla TIQUETE: Representa la venta de un pasaje específico. Reemplaza y mejora la tabla VENTA original.
+CREATE TABLE IF NOT EXISTS TIQUETE (
+    id_tiquete INT AUTO_INCREMENT PRIMARY KEY,
+    id_viaje_programado INT NOT NULL,
+    id_cliente INT NOT NULL,
+    numero_asiento_reservado VARCHAR(10) NOT NULL, -- Ej: "A1", "14"
+    fecha_compra TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    precio_final_pagado DECIMAL(10,2) NOT NULL,
+    metodo_pago VARCHAR(50) NOT NULL,
+    estado_tiquete ENUM('CONFIRMADO', 'CANCELADO', 'PENDIENTE_PAGO', 'UTILIZADO', 'NO_SHOW') DEFAULT 'PENDIENTE_PAGO',
+    codigo_reserva VARCHAR(20) UNIQUE NOT NULL, -- Generado por la aplicación para fácil consulta
+
+    FOREIGN KEY (id_viaje_programado) REFERENCES VIAJE_PROGRAMADO(id_viaje_programado),
+    FOREIGN KEY (id_cliente) REFERENCES CLIENTE(id_cliente),
+    UNIQUE KEY idx_viaje_asiento_unico (id_viaje_programado, numero_asiento_reservado) -- Un asiento solo se vende una vez por viaje
+) AUTO_INCREMENT = 100; -- Mantenemos el AUTO_INCREMENT si es una preferencia
+
+
+-- -----------------------------------------------------
+-- Módulo: INVENTARIOS (Tablas originales del ERP)
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS PROVEEDOR (
+    id_proveedor INT AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(100),
+    contacto VARCHAR(100),
+    telefono VARCHAR(20),
+    email VARCHAR(100)
+);
+
+CREATE TABLE IF NOT EXISTS PRODUCTO (
+    id_producto INT AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(100) NOT NULL,
+    categoria VARCHAR(50),
+    descripcion TEXT,
+    stock INT DEFAULT 0,
+    precio_unitario DECIMAL(10,2) DEFAULT 0.00,
+    stock_minimo INT DEFAULT 0,
+    unidad_medida VARCHAR(50),
+    ubicacion VARCHAR(100),
+    id_proveedor INT DEFAULT NULL,
+    FOREIGN KEY (id_proveedor) REFERENCES PROVEEDOR(id_proveedor)
+        ON DELETE SET NULL
+        ON UPDATE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS MOVIMIENTO_INVENTARIO (
+    id_movimiento INT AUTO_INCREMENT PRIMARY KEY,
+    id_producto INT NOT NULL,
+    tipo_movimiento ENUM('entrada', 'salida') NOT NULL,
+    cantidad INT NOT NULL,
+    fecha DATE NOT NULL,
+    id_empleado INT DEFAULT NULL,
+    observaciones TEXT,
+    FOREIGN KEY (id_producto) REFERENCES PRODUCTO(id_producto) ON DELETE CASCADE,
+    FOREIGN KEY (id_empleado) REFERENCES EMPLEADO(id_empleado) ON DELETE SET NULL
+);
+
+-- -----------------------------------------------------
+-- Módulo: CONTABILIDAD (Tablas originales del ERP)
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS CUENTA_CONTABLE (
+    id_cuenta INT AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(100),
+    tipo VARCHAR(50),
+    saldo_actual DECIMAL(15,2)
+);
+
+CREATE TABLE IF NOT EXISTS TRANSACCION (
+    id_transaccion INT AUTO_INCREMENT PRIMARY KEY,
+    id_cuenta INT NOT NULL,
+    tipo_transaccion VARCHAR(50),
+    monto DECIMAL(15,2),
+    fecha DATE,
+    descripcion TEXT,
+    FOREIGN KEY (id_cuenta) REFERENCES CUENTA_CONTABLE(id_cuenta) ON DELETE CASCADE
+);
+
+-- -----------------------------------------------------
+-- Módulo: COMPRAS A PROVEEDORES (Tablas originales del ERP)
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS COMPRA (
+    id_compra INT AUTO_INCREMENT PRIMARY KEY,
+    id_proveedor INT NOT NULL,
+    fecha DATE NOT NULL,
+    total DECIMAL(10,2) NOT NULL,
+    FOREIGN KEY (id_proveedor) REFERENCES PROVEEDOR(id_proveedor) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS DETALLE_COMPRA (
+    id_detalle INT AUTO_INCREMENT PRIMARY KEY,
+    id_compra INT NOT NULL,
+    id_producto INT NOT NULL,
+    cantidad INT NOT NULL,
+    precio_unitario DECIMAL(10,2) NOT NULL,
+    subtotal DECIMAL(10,2) NOT NULL,
+    FOREIGN KEY (id_compra) REFERENCES COMPRA(id_compra) ON DELETE CASCADE,
+    FOREIGN KEY (id_producto) REFERENCES PRODUCTO(id_producto) ON DELETE CASCADE
+);
+
+-- -----------------------------------------------------
+-- OTRAS TABLAS (Añadidas por el usuario en su script original)
+-- -----------------------------------------------------
+
+-- Tabla BANCO (Original del usuario)
+CREATE TABLE IF NOT EXISTS BANCO (
+    id_usuario INT PRIMARY KEY, -- Asumo que se refiere a id_usuario de la tabla USUARIO
+    saldo DECIMAL(10, 2),
+    FOREIGN KEY (id_usuario) REFERENCES USUARIO(id_usuario) ON DELETE CASCADE -- Añadida FK para integridad
+);

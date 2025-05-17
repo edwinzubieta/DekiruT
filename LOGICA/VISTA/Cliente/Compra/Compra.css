@@ -1,0 +1,64 @@
+/* resumen-compra.css */
+
+body {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+.summary-container {
+    max-width: 1200px;
+}
+
+/* Estilos para los campos de entrada al enfocarlos (similar a pantallas anteriores) */
+input[type="text"]:focus,
+input[type="email"]:focus,
+input[type="tel"]:focus,
+input[type="number"]:focus,
+select:focus {
+    transform: translateY(-1px);
+    box-shadow: 0 0 0 3px rgba(45, 78, 255, 0.2); /* Sombra de foco sutil con el color primario */
+}
+
+/* Estilo para los mensajes de error del formulario */
+.form-error-message {
+    color: #EF4444; /* color 'danger' de Tailwind */
+    background-color: #FEE2E2; /* Un fondo rojo claro */
+    border: 1px solid #FCA5A5; /* Un borde rojo más claro */
+    padding: 0.75rem 1rem;
+    border-radius: 0.5rem; /* rounded-lg de Tailwind */
+    margin-top: 0.5rem; /* mt-2 */
+    font-size: 0.875rem; /* text-sm */
+}
+
+.summary-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #E5E7EB; /* gray-200 */
+}
+.summary-item:last-child {
+    border-bottom: none;
+}
+.summary-item strong {
+    color: #374151; /* gray-700 */
+}
+.summary-item span {
+    color: #1F2937; /* gray-800 */
+}
+
+.seat-list {
+    list-style: none;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.seat-tag {
+    background-color: #DBEAFE; /* blue-100 */
+    color: #1E40AF; /* blue-700 */
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px; /* rounded-full */
+    font-size: 0.875rem;
+    font-weight: 500;
+}
