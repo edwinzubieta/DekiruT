@@ -60,7 +60,7 @@
                        class="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-primary focus:border-primary transition duration-150 ease-in-out">
             </div>
 
-            <div>
+        <!--<div> 
                 <label for="hora-salida" class="block text-sm font-medium text-gray-700 mb-1">Hora de salida:</label>
                 <select id="hora-salida" name="hora-salida" required
                         class="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-primary focus:border-primary transition duration-150 ease-in-out">
@@ -69,14 +69,8 @@
                     <option value="Bogota">12 PM</option>
                     <option value="Sogamoso">6 PM</option>
                     </select>
-            </div>
+            </div>-->
 
-
-            <div>
-                <label for="pasajeros" class="block text-sm font-medium text-gray-700 mb-1">Número de Pasajeros:</label>
-                <input type="number" id="pasajeros" name="pasajeros" value="1" min="1"
-                       class="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-primary focus:border-primary transition duration-150 ease-in-out">
-            </div>
 
              <button type="submit"
                 class="w-full bg-primary hover:bg-primary-hover text-white font-semibold p-4 rounded-lg shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-primary focus:ring-opacity-50 transition duration-150 ease-in-out text-lg">

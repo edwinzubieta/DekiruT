@@ -31,19 +31,7 @@ $saldoFormateado = number_format($saldoUsuario, 2, ',', '.');
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="Main.css">
     <style>
-        /* Estilos adicionales si Main.css no los cubre o para especificidad */
-        .logo-erp {
-            height: 50px; /* Ajusta según sea necesario */
-            width: auto;
-        }
-        .logo-transporte {
-            height: 50px; /* Ajusta según sea necesario */
-            width: auto;
-        }
-        .hero-section {
-            background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('../../../../IMAGENES/FondoLogin.jpg') no-repeat center center; /* Ejemplo de fondo, ajusta la ruta */
-            background-size: cover;
-        }
+
         .logout-button, .history-button { /* Estilo base para los botones del header */
             display: inline-flex;
             align-items: center;
@@ -102,7 +90,7 @@ $saldoFormateado = number_format($saldoUsuario, 2, ',', '.');
                 <a href="historial_compras.php" class="history-button">
                     Historial de Compras
                 </a>
-                <a href="../../MODELO/CerrarSesion.php" class="logout-button">
+                <a href="../../../MODELO/CerrarSesion.php" class="logout-button">
                     Cerrar Sesión
                 </a>
             </div>
