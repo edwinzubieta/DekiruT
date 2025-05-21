@@ -1,88 +1,118 @@
+<?php
+session_start();
+
+// Verificar si el usuario está logueado
+if (!isset($_SESSION['id_usuario'])) {
+    header("Location: ../../MODELO/Login/Login_UI.php");
+    exit();
+}
+
+// Recuperar datos de sesión
+$idUsuario = $_SESSION['id_usuario'];
+$nombreUsuario = $_SESSION['nombre_usuario'] ?? 'Usuario';
+
+// Conexión a la base de datos
+$conexion = new mysqli("localhost", "root", "", "DekiruTDB");
+
+if ($conexion->connect_error) {
+    die("Error de conexión: " . $conexion->connect_error);
+}
+
+// Consultar saldo desde la base de datos
+$sql = "SELECT saldo_disponible FROM USUARIO WHERE id_usuario = ?";
+$stmt = $conexion->prepare($sql);
+$stmt->bind_param("i", $idUsuario);
+$stmt->execute();
+$resultado = $stmt->get_result();
+
+if ($resultado && $resultado->num_rows > 0) {
+    $fila = $resultado->fetch_assoc();
+    $saldoUsuario = $fila['saldo_disponible'];
+} else {
+    $saldoUsuario = 0.00; // Si no se encuentra, asumimos 0 como respaldo
+}
+
+$stmt->close();
+$conexion->close();
+
+// Formatear el saldo como moneda COP
+$saldoFormateado = number_format($saldoUsuario, 2, ',', '.');
+
+?>
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Busca tu Próximo Viaje</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="Compraticket.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
-                    },
-                    colors: {
-                        'primary': '#2D4EFF', // Un azul vibrante como color primario
-                        'primary-hover': '#1E3BCC',
-                        'secondary': '#F3F4F6', // Un gris claro para fondos
-                        'accent': '#10B981', // Un verde para acentos o éxito
-                        'danger': '#EF4444', // Un rojo para errores
-                    }
-                }
-            }
-        }
-    </script>
+    <title>Compra de Tiquetes</title>
+    <link rel="stylesheet" href="estilos_compraticket.css">
 </head>
-<body class="bg-secondary flex items-center justify-center min-h-screen font-sans">
 
-    <div class="search-container bg-white p-8 md:p-12 rounded-xl shadow-2xl w-full max-w-2xl">
-        <h1 class="text-3xl md:text-4xl font-bold text-center text-gray-800 mb-8">Busca tu Próximo Viaje</h1>
 
-        <form id="search-trip-form" class="space-y-6">
-            <div>
-                <label for="origen" class="block text-sm font-medium text-gray-700 mb-1">Origen:</label>
-                <select id="origen" name="origen" required
-                        class="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-primary focus:border-primary transition duration-150 ease-in-out">
-                    <option value="" disabled selected>Selecciona una ciudad de origen</option>
-                    <option value="Tunja">Tunja</option>
-                    <option value="Bogota">Bogotá</option>
-                    <option value="Sogamoso">Sogamoso</option>
-                </select>
+<header class="bg-white shadow-md sticky top-0 z-50">
+    <div class="container mx-auto px-6 py-3 flex justify-between items-center">
+        <div class="flex items-center space-x-4">
+            <img src="../../../../IMAGENES/Logodekiru.jpg" alt="Logo Dekiru ERP" class="logo-erp rounded" style="height:50px;">
+            <img src="../../../../IMAGENES/LogoRapidosDelAltiplano.jpg" alt="Logo Empresa de Transportes" class="logo-transporte rounded" style="height:50px;">
+        </div>
+        <div class="header-right">
+            <div class="user-info-container" style="display:flex; align-items:center; gap:0.5rem; color:#374151;">
+                <span>Bienvenido, <?php echo htmlspecialchars($nombreUsuario); ?></span>
+                <span style="font-size:0.875rem; color:#6B7280;">| Saldo:</span>
+                <span style="font-weight:600; color:#10B981;">$<?php echo htmlspecialchars($saldoFormateado); ?> COP</span>
             </div>
-
-            <div>
-                <label for="destino" class="block text-sm font-medium text-gray-700 mb-1">Destino:</label>
-                <select id="destino" name="destino" required
-                        class="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-primary focus:border-primary transition duration-150 ease-in-out">
-                    <option value="" disabled selected>Selecciona una ciudad de destino</option>
-                    <option value="Tunja">Tunja</option>
-                    <option value="Bogota">Bogotá</option>
-                    <option value="Sogamoso">Sogamoso</option>
-                    </select>
-            </div>
-
-            <div>
-                <label for="fecha-salida" class="block text-sm font-medium text-gray-700 mb-1">Fecha de Salida:</label>
-                <input type="date" id="fecha-salida" name="fecha_salida" required
-                       class="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-primary focus:border-primary transition duration-150 ease-in-out">
-            </div>
-
-        <!--<div> 
-                <label for="hora-salida" class="block text-sm font-medium text-gray-700 mb-1">Hora de salida:</label>
-                <select id="hora-salida" name="hora-salida" required
-                        class="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-primary focus:border-primary transition duration-150 ease-in-out">
-                    <option value="" disabled selected>Selecciona una hora de salida</option>
-                    <option value="Tunja">6 AM</option>
-                    <option value="Bogota">12 PM</option>
-                    <option value="Sogamoso">6 PM</option>
-                    </select>
-            </div>-->
-
-
-             <button type="submit"
-                class="w-full bg-primary hover:bg-primary-hover text-white font-semibold p-4 rounded-lg shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-primary focus:ring-opacity-50 transition duration-150 ease-in-out text-lg">
-                Buscar Viajes
-            </button>
-        </form>
-
-        <div id="search-error-message" class="mt-6 text-center text-sm">
-            </div>
+            <a href="../Historial/Historial.php" class="history-button" style="background-color:#E5E7EB; color:#1F2937; padding:0.5rem 1rem; border-radius:0.375rem; font-weight:500; text-decoration:none; transition: background-color 0.2s ease-in-out;">
+                Historial de Compras
+            </a>
+            <a href="../../../MODELO/CerrarSesion.php" class="logout-button" style="background-color:#EF4444; color:white; padding:0.5rem 1rem; border-radius:0.375rem; font-weight:500; text-decoration:none; transition: background-color 0.2s ease-in-out;">
+                Cerrar Sesión
+            </a>
+        </div>
     </div>
+</header>
 
-    <script src="script.js"></script>
+<style>
+.logout-button:hover {
+    background-color: #DC2626;
+}
+.history-button:hover {
+    background-color: #D1D5DB;
+}
+</style>
+<body>
+    <div class="form-container">
+    <h2>Buscar Viajes</h2>
+
+    <form action="../ResultadoBusqueda/Busqueda.php" method="GET">
+        <label for="origen">Ciudad Origen:</label>
+        <select name="origen" id="origen" required>
+            <option value="" disabled selected>Selecciona origen</option>
+            <option value="Tunja">Tunja</option>
+            <option value="Bogotá">Bogotá</option>
+            <option value="Sogamoso">Sogamoso</option>
+        </select>
+
+        <label for="destino">Ciudad Destino:</label>
+        <select name="destino" id="destino" required>
+            <option value="" disabled selected>Selecciona destino</option>
+            <option value="Tunja">Tunja</option>
+            <option value="Bogotá">Bogotá</option>
+            <option value="Sogamoso">Sogamoso</option>
+        </select>
+
+        <label for="fecha_viaje">Fecha del Viaje:</label>
+        <input type="date" name="fecha_viaje" id="fecha_viaje" required min="<?php echo date('Y-m-d'); ?>">
+
+        <button type="submit">Buscar</button>
+        <!-- BOTÓN PARA VOLVER AL INICIO -->
+        <div class="mt-10 text-center">
+            <a href="../Main/Main.php" class="button">
+                Volver al Inicio
+            </a>
+        </div>
+    </form>
+
+</div>
+
 </body>
 </html>
-

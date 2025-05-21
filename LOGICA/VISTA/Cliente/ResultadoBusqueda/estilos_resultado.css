@@ -1,0 +1,83 @@
+body {
+    font-family: 'Segoe UI', sans-serif;
+    background: url('../../../../IMAGENES/FondoMain.jpg!d') no-repeat center center fixed;
+    background-size: cover;
+    margin: 0;
+    color: #333;
+}
+
+/* HEADER */
+header {
+    background-color: #fff;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+header .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 15px 25px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.logo-erp,
+.logo-transporte {
+    height: 50px;
+    margin-right: 10px;
+    border-radius: 8px;
+}
+.user-info-container {
+    font-weight: bold;
+    font-size: 1rem;
+}
+
+/* CONTENEDOR */
+.form-container {
+    background-color: #fff;
+    max-width: 700px;
+    margin: 40px auto;
+    padding: 30px;
+    border-radius: 18px;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+    text-align: center;
+}
+
+.viaje {
+    background: #f1f6fd;
+    margin: 20px 0;
+    padding: 20px;
+    border-radius: 14px;
+    text-align: left;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+h2 {
+    color: #144b8a;
+    font-size: 2rem;
+    margin-bottom: 20px;
+}
+
+.error, .no-result {
+    background-color: #ffe5e5;
+    border: 1px solid #ffb3b3;
+    color: #b30000;
+    padding: 15px;
+    border-radius: 10px;
+    margin-top: 15px;
+    font-weight: 600;
+}
+
+.volver-container {
+    margin-top: 30px;
+}
+
+.btn-volver {
+    text-decoration: none;
+    background-color: #144b8a;
+    color: white;
+    padding: 10px 25px;
+    border-radius: 8px;
+    transition: background-color 0.3s ease;
+}
+.btn-volver:hover {
+    background-color: #0e3970;
+}

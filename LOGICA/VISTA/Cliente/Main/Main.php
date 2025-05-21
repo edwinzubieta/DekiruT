@@ -1,26 +1,45 @@
 <?php
 session_start();
 
-// Verificar si el usuario está logueado, si no, redirigir a login
-// Es una buena práctica tener esto, aunque no estaba en tu código original.
-// Si no lo necesitas, puedes comentarlo o eliminarlo.
+// Verificar si el usuario está logueado
 if (!isset($_SESSION['id_usuario'])) {
-    // Ajusta la ruta a tu página de login si es diferente
-    header("Location: ../../MODELO/Login/Login_UI.php"); // Ejemplo de ruta, ajústala
+    header("Location: ../../MODELO/Login/Login_UI.php");
     exit();
 }
 
-
-$current_page = basename($_SERVER['PHP_SELF']);
-
-// Recuperar datos del usuario de la sesión
+// Recuperar datos de sesión
+$idUsuario = $_SESSION['id_usuario'];
 $nombreUsuario = $_SESSION['nombre_usuario'] ?? 'Usuario';
-$saldoUsuario = $_SESSION['saldo_usuario'] ?? 0.00; // Obtener saldo de la sesión
+
+// Conexión a la base de datos
+$conexion = new mysqli("localhost", "root", "", "DekiruTDB");
+
+if ($conexion->connect_error) {
+    die("Error de conexión: " . $conexion->connect_error);
+}
+
+// Consultar saldo desde la base de datos
+$sql = "SELECT saldo_disponible FROM USUARIO WHERE id_usuario = ?";
+$stmt = $conexion->prepare($sql);
+$stmt->bind_param("i", $idUsuario);
+$stmt->execute();
+$resultado = $stmt->get_result();
+
+if ($resultado && $resultado->num_rows > 0) {
+    $fila = $resultado->fetch_assoc();
+    $saldoUsuario = $fila['saldo_disponible'];
+} else {
+    $saldoUsuario = 0.00; // Si no se encuentra, asumimos 0 como respaldo
+}
+
+$stmt->close();
+$conexion->close();
 
 // Formatear el saldo como moneda COP
 $saldoFormateado = number_format($saldoUsuario, 2, ',', '.');
 
 ?>
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -87,7 +106,7 @@ $saldoFormateado = number_format($saldoUsuario, 2, ',', '.');
                     <span class="saldo-text">| Saldo:</span>
                     <span class="saldo-amount">$<?php echo htmlspecialchars($saldoFormateado); ?> COP</span>
                 </div>
-                <a href="historial_compras.php" class="history-button">
+                <a href="../Historial/Historial.php" class="history-button">
                     Historial de Compras
                 </a>
                 <a href="../../../MODELO/CerrarSesion.php" class="logout-button">
@@ -141,7 +160,7 @@ $saldoFormateado = number_format($saldoUsuario, 2, ',', '.');
                 <a href="#terms" class="px-3 hover:text-blue-400">Términos y Condiciones</a>
                 <a href="#privacy" class="px-3 hover:text-blue-400">Política de Privacidad</a>
             </div>
-            <p>&copy; <span id="current-year"></span> Sistema de Tiquetes Rapidos del Altipalno. Todos los derechos reservados.</p>
+            <p>&copy; <span id="current-year"></span> Sistema de Tiquetes Rapidos del Altiplano. Todos los derechos reservados.</p>
             <p class="text-sm text-gray-400 mt-1">Desarrollado en colaboración con Dekiru ERP</p>
         </div>
     </footer>
